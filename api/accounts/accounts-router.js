@@ -1,24 +1,59 @@
 const router = require('express').Router()
+const Accounts = require('./accounts-model');
 
-router.get('/', async (req, res, next) => {
-  // DO YOUR MAGIC
+const { checkAccountPayload, checkAccountNameUnique, checkAccountId } = require('./accounts-middleware');
+
+
+router.get('/', (req, res, next) => {
+  Accounts.getAll()
+    .then((data) => res.status(200).json(data))
+    .catch((err) => next(err));
 })
 
-router.get('/:id', (req, res, next) => {
-  // DO YOUR MAGIC
+
+router.get('/:id', checkAccountId, (req, res, next) => {
+  const { id } = req.params;
+
+  Accounts.getById(id)
+  //TODO: NEEDS 404
+    .then((data) => res.status(200).json(data))
+    .catch((err) => next(err));
 })
 
-router.post('/', (req, res, next) => {
-  // DO YOUR MAGIC
+
+router.post('/', checkAccountPayload, checkAccountNameUnique, (req, res, next) => {
+  Accounts.create(req.body)
+    .then((data) => res.status(201).json(data))
+    .catch((err) => next(err))
 })
 
-router.put('/:id', (req, res, next) => {
-  // DO YOUR MAGIC
+
+router.put('/:id', checkAccountPayload, checkAccountId, (req, res, next) => {
+  const { id } = req.params;
+  
+  Accounts.updateById(id, req.body)
+    .then(() => {
+      Accounts.getById(id)
+        .then((data) => res.status(200).json(data))
+        .catch((err) => next(err));
+    })
+    .catch((err) => next(err));
+  });
+
+
+router.delete('/:id', checkAccountId, (req, res, next) => {
+  const { id } = req.params;
+
+  Accounts.getById(id)
+    .then((data) => {
+      Accounts.deleteById(id)
+        .then(() => res.status(200).json(data))
+        .catch((err) => next(err));
+    })
+    .catch((err) => next(err));
+
 });
 
-router.delete('/:id', (req, res, next) => {
-  // DO YOUR MAGIC
-})
 
 router.use((err, req, res, next) => { // eslint-disable-line
   // CALL next(err) IF THE PROMISE REJECTS INSIDE YOUR ENDPOINTS
